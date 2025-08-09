@@ -1,11 +1,23 @@
+//import { MdInbox } from "react-icons/md";
 import { UserCard } from "../components/UserCard";
+//import { type CardUserProps } from "../libs/CardUserType";
 import { cleanUser } from "../libs/CleanUser";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 export default function RandomUserPage() {
-  const [users, setUsers] = useState("");
+  const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [genAmount, setGenAmount] = useState(1);
+
+  useEffect(() => {
+    // Step 1 pull data from local storage
+    const kuay = localStorage.getItem("amount"); // 5
+    // Step 2 check is null?
+    if (kuay) {
+      setGenAmount(Number(kuay));
+    }
+    // Step 3 set gen amount
+  }, []);
 
   const generateBtnOnClick = async () => {
     setIsLoading(true);
@@ -14,6 +26,7 @@ export default function RandomUserPage() {
     );
     setIsLoading(false);
     const users = resp.data.results;
+    setUsers(users);
     //Your code here
     //Process result from api response with map function. Tips use function from /src/libs/CleanUser
     //Then update state with function : setUsers(...)
@@ -28,8 +41,12 @@ export default function RandomUserPage() {
           className="form-control text-center"
           style={{ maxWidth: "100px" }}
           type="number"
-          onChange={(event: any) => setGenAmount(event.target.value)}
+          onChange={(event: any) => {
+            setGenAmount(event.target.value);
+            localStorage.setItem("amount", event.target.value);
+          }}
           value={genAmount}
+          min={1}
         />
         <button className="btn btn-dark" onClick={generateBtnOnClick}>
           Generate
@@ -38,7 +55,20 @@ export default function RandomUserPage() {
       {isLoading && (
         <p className="display-6 text-center fst-italic my-4">Loading ...</p>
       )}
-      {users && !isLoading && users.map(/*code map rendering UserCard here */)}
+      {users &&
+        !isLoading &&
+        users.map((user, index: number) => {
+          const userTrim = cleanUser(user);
+          return (
+            <UserCard
+              key={index}
+              name={userTrim.name}
+              imgUrl={userTrim.imgUrl}
+              address={userTrim.address}
+              email={userTrim.email}
+            />
+          );
+        })}
     </div>
   );
 }
